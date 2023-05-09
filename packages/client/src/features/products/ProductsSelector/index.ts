@@ -1,0 +1,1 @@
+export { ProductsSelector } from './ProductsSelector';
