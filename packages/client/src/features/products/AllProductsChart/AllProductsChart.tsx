@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import {
   axisBottom,
   axisLeft,
@@ -9,6 +9,7 @@ import {
   scaleLinear,
   scaleOrdinal,
   select,
+  schemeAccent
 } from 'd3';
 import { eachMonthOfInterval, endOfYear, format, startOfYear } from 'date-fns';
 import styled from 'styled-components';
@@ -32,25 +33,31 @@ const COLORS = ['tomato', 'lightblue'];
 export const AllProductsChart = (props: Props) => {
   const { data, selectedProduct } = props;
   const canvasRef = useRef(null);
-  const legendRef = useRef(null);
   const xAxisRef = useRef(null);
   const yAxisRef = useRef(null);
 
   const navigate = useNavigate();
 
+  const factories = useMemo(
+    () =>
+      data
+        ? groups(data.products, (p) => p.factoryId).map((f) =>
+            getFactoryName(f[0])
+          )
+        : [],
+    [data]
+  );
+
+  const colorsScale = scaleOrdinal()
+    .domain(factories)
+    .range(schemeAccent);
+
   useEffect(() => {
-    if (
-      !canvasRef.current ||
-      !xAxisRef.current ||
-      !yAxisRef.current ||
-      !legendRef.current ||
-      !data
-    ) {
+    if (!canvasRef.current || !xAxisRef.current || !yAxisRef.current || !data) {
       return;
     }
 
     const canvas = select(canvasRef.current);
-    const legend = select(legendRef.current);
     const xAxisElement = select<SVGSVGElement, any>(xAxisRef.current);
     const yAxisElement = select<SVGSVGElement, any>(yAxisRef.current);
 
@@ -104,27 +111,18 @@ export const AllProductsChart = (props: Props) => {
       });
     }) as unknown as number;
 
-    // console.log(data.products);
-    const factories = groups(data.products, (p) => p.factoryId).map(
-      (f) => getFactoryName(f[0])
-    );
-
     const xScale = scaleBand()
       .domain(year)
       .range([MARGINS.left, WIDTH])
       .padding(0.2);
     const xInnerScale = scaleBand()
-      .domain(factories) // TODO: Use real domain values
+      .domain(factories)
       .range([0, xScale.bandwidth()])
       .padding(0.2);
 
     const yScale = scaleLinear()
       .domain([maxProducts, 0])
       .range([MARGINS.bottom, HEIGHT - MARGINS.bottom]);
-
-    const colorsScale = scaleOrdinal()
-      .domain(factories) // TODO: Use real domain values
-      .range(COLORS);
 
     const xAxis = axisBottom(xScale);
     const yAxis = axisLeft(yScale);
@@ -150,7 +148,7 @@ export const AllProductsChart = (props: Props) => {
       })
       .join('rect')
       .on('click', (_, d) => {
-        navigate(`/details/${d.factoryId}/${d.date.getMonth() + 1}`)
+        navigate(`/details/${d.factoryId}/${d.date.getMonth() + 1}`);
       })
       .attr('x', (d) => {
         return xInnerScale(getFactoryName(d.factoryId)) || 0;
@@ -163,23 +161,35 @@ export const AllProductsChart = (props: Props) => {
       .attr('fill', (d) => {
         return colorsScale(getFactoryName(d.factoryId));
       });
-
-    // legend.selectAll('');
   }, [data, selectedProduct]);
 
   return (
-    <>
+    <Root>
       <Canvas ref={canvasRef} width={WIDTH} height={HEIGHT}>
         <g className="container"></g>
         <g ref={xAxisRef} />
         <g ref={yAxisRef} />
       </Canvas>
-      <Legend ref={legendRef} width={WIDTH} height={50} />
-    </>
+      <Legend>
+        {
+          factories.map(f => (
+            <LegendLabel>
+              <Color color={colorsScale(f)}/>
+              <span>{f}</span>
+            </LegendLabel>
+          ))
+        }
+      </Legend>
+    </Root>
   );
 };
 
-const getFactoryName = (id: number) => `Фабрика #${id}`
+const getFactoryName = (id: number) => `Фабрика #${id}`;
+
+const Root = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
 
 const Canvas = styled.svg`
   & rect {
@@ -187,4 +197,24 @@ const Canvas = styled.svg`
   }
 `;
 
-const Legend = styled.svg``;
+const Legend = styled.div`
+  display: flex;
+  gap: 8px;
+  width: ${WIDTH}px;
+  height: 50px;
+  justify-content: center;
+`;
+
+const LegendLabel = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const Color = styled.span<{color: string}>`
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background-color: ${p => p.color};
+`;
