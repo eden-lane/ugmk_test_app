@@ -3,6 +3,7 @@ import {
   axisBottom,
   axisLeft,
   groups,
+  index,
   max,
   scaleBand,
   scaleLinear,
@@ -11,6 +12,7 @@ import {
 } from 'd3';
 import { eachMonthOfInterval, endOfYear, format, startOfYear } from 'date-fns';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
 
 type Props = {
   data: any;
@@ -25,19 +27,30 @@ const MARGINS = {
   bottom: 20,
   right: 0,
 };
+const COLORS = ['tomato', 'lightblue'];
 
 export const AllProductsChart = (props: Props) => {
   const { data, selectedProduct } = props;
   const canvasRef = useRef(null);
+  const legendRef = useRef(null);
   const xAxisRef = useRef(null);
   const yAxisRef = useRef(null);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
-    if (!canvasRef.current || !xAxisRef.current || !yAxisRef.current || !data) {
+    if (
+      !canvasRef.current ||
+      !xAxisRef.current ||
+      !yAxisRef.current ||
+      !legendRef.current ||
+      !data
+    ) {
       return;
     }
 
     const canvas = select(canvasRef.current);
+    const legend = select(legendRef.current);
     const xAxisElement = select<SVGSVGElement, any>(xAxisRef.current);
     const yAxisElement = select<SVGSVGElement, any>(yAxisRef.current);
 
@@ -63,10 +76,9 @@ export const AllProductsChart = (props: Props) => {
         date,
         factories: factories.map(([id, prodcuts]) => {
           return {
+            date,
             factoryId: id,
             products: prodcuts.reduce((prev, current) => {
-              console.log(selectedProduct);
-              
               current.products
                 .filter((p) => {
                   if (selectedProduct === 'all') {
@@ -92,12 +104,17 @@ export const AllProductsChart = (props: Props) => {
       });
     }) as unknown as number;
 
+    // console.log(data.products);
+    const factories = groups(data.products, (p) => p.factoryId).map(
+      (f) => getFactoryName(f[0])
+    );
+
     const xScale = scaleBand()
       .domain(year)
       .range([MARGINS.left, WIDTH])
       .padding(0.2);
     const xInnerScale = scaleBand()
-      .domain(['1', '2'])
+      .domain(factories) // TODO: Use real domain values
       .range([0, xScale.bandwidth()])
       .padding(0.2);
 
@@ -106,8 +123,8 @@ export const AllProductsChart = (props: Props) => {
       .range([MARGINS.bottom, HEIGHT - MARGINS.bottom]);
 
     const colorsScale = scaleOrdinal()
-      .domain(['1', '2'])
-      .range(['tomato', 'lightblue']);
+      .domain(factories) // TODO: Use real domain values
+      .range(COLORS);
 
     const xAxis = axisBottom(xScale);
     const yAxis = axisLeft(yScale);
@@ -132,8 +149,11 @@ export const AllProductsChart = (props: Props) => {
         return d.factories;
       })
       .join('rect')
+      .on('click', (_, d) => {
+        navigate(`/details/${d.factoryId}/${d.date.getMonth() + 1}`)
+      })
       .attr('x', (d) => {
-        return xInnerScale(d.factoryId.toString()) || 0;
+        return xInnerScale(getFactoryName(d.factoryId)) || 0;
       })
       .attr('width', xInnerScale.bandwidth())
       .attr('height', (d) => yScale(d.products as number))
@@ -141,17 +161,30 @@ export const AllProductsChart = (props: Props) => {
         return HEIGHT - yScale(d.products as number) - MARGINS.bottom;
       })
       .attr('fill', (d) => {
-        return colorsScale(d.factoryId.toString());
+        return colorsScale(getFactoryName(d.factoryId));
       });
+
+    // legend.selectAll('');
   }, [data, selectedProduct]);
 
   return (
-    <Canvas ref={canvasRef} width={WIDTH} height={HEIGHT}>
-      <g className="container"></g>
-      <g ref={xAxisRef} />
-      <g ref={yAxisRef} />
-    </Canvas>
+    <>
+      <Canvas ref={canvasRef} width={WIDTH} height={HEIGHT}>
+        <g className="container"></g>
+        <g ref={xAxisRef} />
+        <g ref={yAxisRef} />
+      </Canvas>
+      <Legend ref={legendRef} width={WIDTH} height={50} />
+    </>
   );
 };
 
-const Canvas = styled.svg``;
+const getFactoryName = (id: number) => `Фабрика #${id}`
+
+const Canvas = styled.svg`
+  & rect {
+    cursor: pointer;
+  }
+`;
+
+const Legend = styled.svg``;
