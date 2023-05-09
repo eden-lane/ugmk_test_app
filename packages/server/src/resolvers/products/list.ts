@@ -27,7 +27,10 @@ export const listProducts = async (
         id: parseInt(id, 10),
         factoryId: parseInt(factory_id, 10),
         date: parse(product.date, 'd/M/yyyy', today),
-        ...products
+        products: Object.entries(products).map(([id, value]) => ({
+          id,
+          value: parseInt(value, 10),
+        })),
       });
     })
     .on('end', () =>
