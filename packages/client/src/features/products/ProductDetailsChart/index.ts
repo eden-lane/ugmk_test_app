@@ -1,0 +1,1 @@
+export { ProductDetailsChart } from './ProductDetailsChart';
