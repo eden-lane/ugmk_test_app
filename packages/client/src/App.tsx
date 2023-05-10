@@ -6,12 +6,17 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query';
 import { MainPage } from './pages/Main';
+import { DetailsPage } from './pages/Details';
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <MainPage />
   },
+  {
+    path: '/details/:factoryId/:month',
+    element: <DetailsPage />
+  }
 ]);
 
 const queryClient = new QueryClient();

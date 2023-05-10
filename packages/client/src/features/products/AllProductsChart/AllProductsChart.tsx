@@ -3,7 +3,6 @@ import {
   axisBottom,
   axisLeft,
   groups,
-  index,
   max,
   scaleBand,
   scaleLinear,
