@@ -8,12 +8,13 @@ import {
   scaleLinear,
   scaleOrdinal,
   select,
-  schemeAccent
+  schemeAccent,
 } from 'd3';
 import { eachMonthOfInterval, endOfYear, format, startOfYear } from 'date-fns';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { Product } from '../products.types';
+import { ru } from 'date-fns/locale';
 
 type Props = {
   data: Product[];
@@ -40,16 +41,12 @@ export const AllProductsChart = (props: Props) => {
   const factories = useMemo(
     () =>
       data
-        ? groups(data, (p) => p.factoryId).map((f) =>
-            getFactoryName(f[0])
-          )
+        ? groups(data, (p) => p.factoryId).map((f) => getFactoryName(f[0]))
         : [],
     [data]
   );
 
-  const colorsScale = scaleOrdinal()
-    .domain(factories)
-    .range(schemeAccent);
+  const colorsScale = scaleOrdinal().domain(factories).range(schemeAccent);
 
   useEffect(() => {
     if (!canvasRef.current || !xAxisRef.current || !yAxisRef.current || !data) {
@@ -63,7 +60,7 @@ export const AllProductsChart = (props: Props) => {
     const year = eachMonthOfInterval({
       start: startOfYear(new Date(2022, 1, 1)),
       end: endOfYear(new Date(2022, 1, 1)),
-    }).map((date) => format(date, 'MMM'));
+    }).map((date) => format(date, 'MMM', { locale: ru }));
 
     const dataByMonth = groups(
       data,
@@ -94,7 +91,7 @@ export const AllProductsChart = (props: Props) => {
                   return p.id === selectedProduct;
                 })
                 .forEach((p) => {
-                  prev += p.value;
+                  prev += p.value / 1000;
                 });
 
               return prev;
@@ -110,6 +107,9 @@ export const AllProductsChart = (props: Props) => {
       });
     }) as unknown as number;
 
+    console.log(result);
+    console.log(maxProducts);
+
     const xScale = scaleBand()
       .domain(year)
       .range([MARGINS.left, WIDTH])
@@ -120,8 +120,10 @@ export const AllProductsChart = (props: Props) => {
       .padding(0.2);
 
     const yScale = scaleLinear()
-      .domain([maxProducts, 0])
-      .range([MARGINS.bottom, HEIGHT - MARGINS.bottom]);
+      .domain([0, maxProducts])
+      .range([HEIGHT - MARGINS.bottom, MARGINS.bottom]);
+
+    window.yScale = yScale;
 
     const xAxis = axisBottom(xScale);
     const yAxis = axisLeft(yScale);
@@ -139,7 +141,9 @@ export const AllProductsChart = (props: Props) => {
       .data(result)
       .join('g')
       .style('transform', (d) => {
-        return `translateX(${xScale(format(d.date, 'MMM')) || 0}px)`;
+        return `translateX(${
+          xScale(format(d.date, 'MMM', { locale: ru })) || 0
+        }px)`;
       })
       .selectAll('rect')
       .data((d) => {
@@ -153,9 +157,11 @@ export const AllProductsChart = (props: Props) => {
         return xInnerScale(getFactoryName(d.factoryId)) || 0;
       })
       .attr('width', xInnerScale.bandwidth())
-      .attr('height', (d) => yScale(d.products as number))
+      .attr('height', (d) => {
+        return HEIGHT - yScale(d.products as number);
+      })
       .attr('y', (d) => {
-        return HEIGHT - yScale(d.products as number) - MARGINS.bottom;
+        return yScale(d.products as number) - MARGINS.bottom;
       })
       .attr('fill', (d) => {
         return colorsScale(getFactoryName(d.factoryId)) as string;
@@ -170,14 +176,12 @@ export const AllProductsChart = (props: Props) => {
         <g ref={yAxisRef} />
       </Canvas>
       <Legend>
-        {
-          factories.map(f => (
-            <LegendLabel key={f}>
-              <Color color={colorsScale(f) as string}/>
-              <span>{f}</span>
-            </LegendLabel>
-          ))
-        }
+        {factories.map((f) => (
+          <LegendLabel key={f}>
+            <Color color={colorsScale(f) as string} />
+            <span>{f}</span>
+          </LegendLabel>
+        ))}
       </Legend>
     </Root>
   );
@@ -210,10 +214,10 @@ const LegendLabel = styled.div`
   gap: 4px;
 `;
 
-const Color = styled.span<{color: string}>`
+const Color = styled.span<{ color: string }>`
   display: inline-block;
   width: 16px;
   height: 16px;
   border-radius: 4px;
-  background-color: ${p => p.color};
+  background-color: ${(p) => p.color};
 `;
