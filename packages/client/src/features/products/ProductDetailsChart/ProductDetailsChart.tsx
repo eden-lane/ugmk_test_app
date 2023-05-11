@@ -1,9 +1,16 @@
 import React, { useEffect, useRef } from 'react';
+import {
+  PieArcDatum,
+  arc,
+  pie,
+  scaleOrdinal,
+  schemeBlues,
+  select
+} from 'd3';
 import styled from 'styled-components';
-import { arc, pie, scaleOrdinal, schemeAccent, schemeBlues, schemeCategory10, schemeSpectral, select } from 'd3';
 
 type Props = {
-  data: any;
+  data: Record<number, number>;
 };
 
 const HEIGHT = 250;
@@ -26,7 +33,7 @@ export const ProductDetailsChart = (props: Props) => {
 
     const canvas = select(canvasRef.current);
 
-    const products = pie().value((d) => {
+    const products = pie<[string, number]>().value((d) => {
       return d[1];
     })(Object.entries(data));
 
@@ -36,9 +43,9 @@ export const ProductDetailsChart = (props: Props) => {
       .selectAll('path')
       .data(products)
       .join('path')
-      .attr('d', arc().innerRadius(0).outerRadius(RADIUS))
-      .attr('fill', d => {
-        return colorsScale(d.data[0]);
+      .attr('d', arc<PieArcDatum<[string, number]>>().innerRadius(0).outerRadius(RADIUS))
+      .attr('fill', (d) => {
+        return colorsScale(d.data[0]) as string;
       });
   }, [data]);
 
@@ -48,16 +55,12 @@ export const ProductDetailsChart = (props: Props) => {
         <g className="container" />
       </Canvas>
       <Legend>
-        {
-          Object.keys(data).map((productName) => (
-            <LegendLabel key={productName}>
-              <Color color={colorsScale(productName)} />
-              <span>
-                {productName}
-              </span>
-            </LegendLabel>
-          ))
-        }
+        {Object.keys(data).map((productName) => (
+          <LegendLabel key={productName}>
+            <Color color={colorsScale(productName) as string} />
+            <span>{productName}</span>
+          </LegendLabel>
+        ))}
       </Legend>
     </>
   );

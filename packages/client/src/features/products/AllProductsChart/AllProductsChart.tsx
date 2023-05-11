@@ -13,9 +13,10 @@ import {
 import { eachMonthOfInterval, endOfYear, format, startOfYear } from 'date-fns';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import { Product } from '../products.types';
 
 type Props = {
-  data: any;
+  data: Product[];
   selectedProduct: 'all' | string;
 };
 
@@ -27,7 +28,6 @@ const MARGINS = {
   bottom: 20,
   right: 0,
 };
-const COLORS = ['tomato', 'lightblue'];
 
 export const AllProductsChart = (props: Props) => {
   const { data, selectedProduct } = props;
@@ -40,7 +40,7 @@ export const AllProductsChart = (props: Props) => {
   const factories = useMemo(
     () =>
       data
-        ? groups(data.products, (p) => p.factoryId).map((f) =>
+        ? groups(data, (p) => p.factoryId).map((f) =>
             getFactoryName(f[0])
           )
         : [],
@@ -66,7 +66,7 @@ export const AllProductsChart = (props: Props) => {
     }).map((date) => format(date, 'MMM'));
 
     const dataByMonth = groups(
-      data.products,
+      data,
       (d) => {
         const date = new Date(d.date);
 
@@ -158,7 +158,7 @@ export const AllProductsChart = (props: Props) => {
         return HEIGHT - yScale(d.products as number) - MARGINS.bottom;
       })
       .attr('fill', (d) => {
-        return colorsScale(getFactoryName(d.factoryId));
+        return colorsScale(getFactoryName(d.factoryId)) as string;
       });
   }, [data, selectedProduct]);
 
@@ -173,7 +173,7 @@ export const AllProductsChart = (props: Props) => {
         {
           factories.map(f => (
             <LegendLabel>
-              <Color color={colorsScale(f)}/>
+              <Color color={colorsScale(f) as string}/>
               <span>{f}</span>
             </LegendLabel>
           ))

@@ -1,8 +1,9 @@
 import { index } from 'd3';
-import React, { useEffect, useMemo } from 'react';
+import React, { ChangeEvent, useEffect, useMemo } from 'react';
+import { Product } from '../products.types';
 
 type Props = {
-  data: any;
+  data: Product[];
   value: string;
   onChange(value: string): void;
 };
@@ -15,16 +16,16 @@ export const ProductsSelector = (props: Props) => {
       return;
     }
 
-    return data.products.reduce((prev, current) => {
+    return data.reduce((prev, current) => {
       current.products.forEach((p) => {
         prev[p.id] = true;
       });
 
       return prev;
-    }, {});
+    }, {} as Record<string, boolean>);
   }, [data]);
 
-  const handleChange = (event) => {
+  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     onChange(event.target.value);
   }
 
