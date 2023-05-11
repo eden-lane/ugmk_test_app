@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import styled from 'styled-components';
 import { AllProductsChart } from '../../features/products/AllProductsChart';
 import { ProductsSelector } from '../../features/products/ProductsSelector';
 import { useProductsQuery } from '../../features/products/products.api';
@@ -18,11 +19,11 @@ export const MainPage = () => {
   };
 
   if (!data) {
-    return <>Loading...</>;
+    return <Root>Loading...</Root>;
   }
 
   return (
-    <>
+    <Root>
       <ProductsSelector
         data={data.products}
         value={selectedProduct}
@@ -32,6 +33,11 @@ export const MainPage = () => {
         data={data.products}
         selectedProduct={selectedProduct}
       />
-    </>
+    </Root>
   );
 };
+
+const Root = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
