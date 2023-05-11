@@ -50,7 +50,7 @@ export const ProductDetailsChart = (props: Props) => {
   }, [data]);
 
   return (
-    <>
+    <Root>
       <Canvas ref={canvasRef} width={WIDTH} height={HEIGHT}>
         <g className="container" />
       </Canvas>
@@ -62,9 +62,16 @@ export const ProductDetailsChart = (props: Props) => {
           </LegendLabel>
         ))}
       </Legend>
-    </>
+    </Root>
   );
 };
+
+const Root = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+`;
 
 const Canvas = styled.svg``;
 
