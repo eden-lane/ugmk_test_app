@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "start": "vite --port 3000 --host",
+    "build": "vite build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

@@ -1,9 +1,15 @@
 import React, { useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import { useProductDetails } from '../../features/products/products.api';
 import { ProductDetailsChart } from '../../features/products/ProductDetailsChart';
 
 export const DetailsPage = () => {
-  const { data } = useProductDetails(1, 1);
+  const { factoryId, month } = useParams<{
+    factoryId: string;
+    month: string;
+  }>();
+  
+  const { data } = useProductDetails(Number(factoryId), Number(month));
 
   const products = useMemo(() => {
     if (!data) {
