@@ -172,7 +172,7 @@ export const AllProductsChart = (props: Props) => {
       <Legend>
         {
           factories.map(f => (
-            <LegendLabel>
+            <LegendLabel key={f}>
               <Color color={colorsScale(f) as string}/>
               <span>{f}</span>
             </LegendLabel>
