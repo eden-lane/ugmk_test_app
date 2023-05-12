@@ -123,8 +123,6 @@ export const AllProductsChart = (props: Props) => {
       .domain([0, maxProducts])
       .range([HEIGHT - MARGINS.bottom, MARGINS.bottom]);
 
-    window.yScale = yScale;
-
     const xAxis = axisBottom(xScale);
     const yAxis = axisLeft(yScale);
 
@@ -158,10 +156,10 @@ export const AllProductsChart = (props: Props) => {
       })
       .attr('width', xInnerScale.bandwidth())
       .attr('height', (d) => {
-        return HEIGHT - yScale(d.products as number);
+        return HEIGHT - yScale(d.products as number) - MARGINS.bottom;
       })
       .attr('y', (d) => {
-        return yScale(d.products as number) - MARGINS.bottom;
+        return yScale(d.products as number);
       })
       .attr('fill', (d) => {
         return colorsScale(getFactoryName(d.factoryId)) as string;
