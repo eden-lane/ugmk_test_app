@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npm run start -w packages/client",
+    "start": "docker-compose up",
     "start:mocks": "json-server --watch ./mocks/products.json --port 3001 --host 0.0.0.0",
     "dockerize": "docker build -f client.dev.Dockerfile -t ugmk_test_app .",
     "start-container": "docker run --name ugmk_test_app --rm -d -p 3000:3000 ugmk_test_app",
